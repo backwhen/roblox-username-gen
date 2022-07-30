@@ -8,7 +8,8 @@ character_limit = int(input('Maximum number of characters in name: '))
 
 limits = httpx.Limits(max_connections=5)
 client = httpx.AsyncClient(
-    limits=limits
+    limits=limits,
+    timeout=None
 )
 
 
