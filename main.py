@@ -46,6 +46,8 @@ async def combine(word_list: list[str]) -> None:
                 await asyncio.gather(*coros)
                 coros.clear()
 
+    await asyncio.gather(*coros)
+
 
 async def main() -> None:
     req = await client.get('https://gist.githubusercontent.com/deekayen/4148741/raw')
