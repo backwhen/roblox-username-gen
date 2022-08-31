@@ -1,16 +1,12 @@
 import asyncio
-import random
 
 import httpx
 from rich import print
 
+word_list = input('Raw list of words to use (URL): ')
 character_limit = int(input('Maximum number of characters in name: '))
 
-limits = httpx.Limits(max_connections=5)
-client = httpx.AsyncClient(
-    limits=limits,
-    timeout=None
-)
+client = httpx.AsyncClient(timeout=None)
 
 
 def save(content: str) -> None:
@@ -24,8 +20,7 @@ async def check(user: str) -> None:
 
     if 'message' in res and 'is valid' in res['message']:
         print(f'The username {user} is [bold green]available')
-        save(user)
-        return
+        return save(user)
 
     print(f'The username {user} is [bold red]already taken')
 
@@ -33,24 +28,22 @@ async def check(user: str) -> None:
 async def combine(word_list: list[str]) -> None:
     coros = []
 
-    random.shuffle(word_list)
-    for word in word_list:
-        for word2 in reversed(word_list):
-            user = f'{word}{word2}'
-            if len(user) > character_limit:
-                continue
+    new_word_list = (word + word2 for word in word_list for word2 in reversed(word_list))
+    for word in new_word_list:
+        if len(word) > character_limit:
+            continue
 
-            coros.append(check(user))
+        coros.append(check(word))
 
-            if len(coros) == 10:
-                await asyncio.gather(*coros)
-                coros.clear()
+        if len(coros) == 10:
+            await asyncio.gather(*coros)
+            coros.clear()
 
     await asyncio.gather(*coros)
 
 
 async def main() -> None:
-    req = await client.get('https://gist.githubusercontent.com/deekayen/4148741/raw')
+    req = await client.get(word_list)
     words = req.text.splitlines()
     await combine(words)
 
